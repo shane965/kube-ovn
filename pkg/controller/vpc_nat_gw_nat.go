@@ -696,11 +696,7 @@ func (c *Controller) handleAddIptablesDnatRule(key string) error {
 		klog.Errorf("failed to get eip, %v", err)
 		return err
 	}
-	if eip.Status.Nat != "" && eip.Status.Nat != util.DnatUsingEip {
-		// eip is in use by other nat
-		err = fmt.Errorf("failed to create dnat %s, eip '%s' is used by nat %s", key, eipName, eip.Status.Nat)
-		return err
-	}
+
 	if dup, err := c.isDnatDuplicated(eip.Spec.NatGwDp, eipName, dnat.Name, dnat.Spec.ExternalPort); dup || err != nil {
 		return err
 	}
@@ -775,11 +771,7 @@ func (c *Controller) handleUpdateIptablesDnatRule(key string) error {
 		klog.Errorf("failed to get eip, %v", err)
 		return err
 	}
-	if eip.Status.Nat != "" && eip.Status.Nat != "dnat" {
-		// eip is in use by other nat
-		err = fmt.Errorf("failed to update dnat %s, eip '%s' is used by nat %s", key, eipName, eip.Status.Nat)
-		return err
-	}
+
 	if dup, err := c.isDnatDuplicated(cachedDnat.Status.NatGwDp, eipName, cachedDnat.Name, cachedDnat.Spec.ExternalPort); dup || err != nil {
 		klog.Errorf("failed to update dnat, %v", err)
 		return err
@@ -880,11 +872,7 @@ func (c *Controller) handleAddIptablesSnatRule(key string) error {
 		klog.Errorf("failed to get eip, %v", err)
 		return err
 	}
-	if eip.Status.Nat != "" && eip.Status.Nat != "snat" {
-		// eip is in use by other nat
-		err = fmt.Errorf("failed to create snat %s, eip '%s' is used by nat '%s'", key, eipName, eip.Status.Nat)
-		return err
-	}
+
 	// create snat
 	v4Cidr, _ := util.SplitStringIP(snat.Spec.InternalCIDR)
 	if v4Cidr == "" {
@@ -968,11 +956,7 @@ func (c *Controller) handleUpdateIptablesSnatRule(key string) error {
 		klog.Errorf("failed to get eip, %v", err)
 		return err
 	}
-	if eip.Status.Nat != "" && eip.Status.Nat != "snat" {
-		// eip is in use by other nat
-		err = fmt.Errorf("failed to update snat %s, eip '%s' is used by %s", key, eipName, eip.Status.Nat)
-		return err
-	}
+
 	// add or update should make sure vpc nat enabled
 	if vpcNatEnabled != "true" {
 		return fmt.Errorf("iptables nat gw not enable")
